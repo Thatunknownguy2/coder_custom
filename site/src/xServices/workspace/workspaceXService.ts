@@ -54,6 +54,7 @@ export interface WorkspaceContext {
   // our server side events instance
   eventSource?: EventSource
   workspace?: TypesGen.Workspace
+  startupScriptLogs?: string
   template?: TypesGen.Template
   templateParameters?: TypesGen.TemplateVersionParameter[]
   build?: TypesGen.WorkspaceBuild
@@ -130,6 +131,9 @@ export const workspaceMachine = createMachine(
       services: {} as {
         getWorkspace: {
           data: TypesGen.Workspace
+        }
+        getStartupScriptLogs: {
+          data: TypesGen.StartupScriptLog,
         }
         getTemplate: {
           data: TypesGen.Template
@@ -469,6 +473,32 @@ export const workspaceMachine = createMachine(
               },
             },
           },
+          startupLogs: {
+            initial: "gettingStartupScriptLogs",
+            states: {
+              gettingStartupScriptLogs: {
+                invoke: {
+                  src: "getStartupScriptLogs",
+                  onDone: [
+                    {
+                      actions: ["assignStartupScriptLogs"],
+                      target: "loadedStartupScriptLogs",
+                    }
+                  ],
+                },
+              },
+              loadedStartupScriptLogs: {
+                // TODO: just some jank until sse, but also this should go on the
+                // individual job page right?
+                // TODO: also errors
+                on: {
+                  REFRESH_TIMELINE: {
+                    target: "#workspaceState.ready.startupLogs.gettingStartupScriptLogs",
+                  },
+                },
+              },
+            },
+          },
           applications: {
             initial: "gettingApplicationsHost",
             states: {
@@ -519,6 +549,7 @@ export const workspaceMachine = createMachine(
       clearContext: () =>
         assign({
           workspace: undefined,
+          startupScriptLogs: undefined,
           template: undefined,
           build: undefined,
           permissions: undefined,
@@ -532,6 +563,9 @@ export const workspaceMachine = createMachine(
       }),
       clearGetWorkspaceError: (context) =>
         assign({ ...context, getWorkspaceError: undefined }),
+      assignStartupScriptLogs: assign({
+        startupScriptLogs: (_, event) => event.data.output,
+      }),
       assignTemplate: assign({
         template: (_, event) => event.data,
       }),
@@ -662,6 +696,9 @@ export const workspaceMachine = createMachine(
             include_deleted: true,
           },
         )
+      },
+      getStartupScriptLogs: async (_, event) => {
+        return await API.getWorkspaceAgentStartupLogs(event.agentID)
       },
       getTemplate: async (context) => {
         if (context.workspace) {

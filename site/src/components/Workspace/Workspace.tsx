@@ -60,6 +60,8 @@ export interface WorkspaceProps {
   template?: TypesGen.Template
   templateParameters?: TypesGen.TemplateVersionParameter[]
   quota_budget?: number
+  // TODO: uhhh idk about all this
+  startupScriptLogs?: string
 }
 
 /**
@@ -87,6 +89,7 @@ export const Workspace: FC<React.PropsWithChildren<WorkspaceProps>> = ({
   template,
   templateParameters,
   quota_budget,
+  startupScriptLogs,
 }) => {
   const { t } = useTranslation("workspacePage")
   const styles = useStyles()
@@ -213,6 +216,8 @@ export const Workspace: FC<React.PropsWithChildren<WorkspaceProps>> = ({
             error={workspaceErrors[WorkspaceErrors.GET_RESOURCES_ERROR]}
           />
         )}
+
+        {typeof startupScriptLogs && <div>{startupScriptLogs}</div>}
 
         {typeof resources !== "undefined" && resources.length > 0 && (
           <Resources
