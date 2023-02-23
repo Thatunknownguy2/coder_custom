@@ -76,6 +76,7 @@ type Client interface {
 	PostLifecycle(ctx context.Context, state agentsdk.PostLifecycleRequest) error
 	PostAppHealth(ctx context.Context, req agentsdk.PostAppHealthsRequest) error
 	PostStartup(ctx context.Context, req agentsdk.PostStartupRequest) error
+	InsertOrUpdateStartupLogs(ctx context.Context, req agentsdk.InsertOrUpdateStartupLogsRequest) error
 }
 
 func New(options Options) io.Closer {
@@ -611,19 +612,48 @@ func (a *agent) runCoordinator(ctx context.Context, network *tailnet.Conn) error
 	}
 }
 
+// apiLogWriter writes output to the logs endpoint.
+type apiLogWriter struct {
+	client Client
+	ctx    context.Context
+	bytes  []byte
+}
+
+func (w *apiLogWriter) Write(b []byte) (int, error) {
+	// TODO: mutex maybe, can write be called concurrently?
+	// TODO: also convert to string here is probably error-prone if mid-char?
+	// TODO: store as bytes in db?
+	// TODO: concat in db?  separate rows?  read file instead of storing in mem?
+	w.bytes = append(w.bytes, b...)
+	err := w.client.InsertOrUpdateStartupLogs(w.ctx, agentsdk.InsertOrUpdateStartupLogsRequest{
+		Output: string(w.bytes),
+	})
+	if err != nil {
+		return 0, xerrors.Errorf("insert startup logs: %w", err)
+	}
+	return len(b), nil
+}
+
 func (a *agent) runStartupScript(ctx context.Context, script string) error {
 	if script == "" {
 		return nil
 	}
 
 	a.logger.Info(ctx, "running startup script", slog.F("script", script))
-	writer, err := a.filesystem.OpenFile(filepath.Join(a.logDir, "coder-startup-script.log"), os.O_CREATE|os.O_RDWR, 0o600)
+
+	fileWriter, err := a.filesystem.OpenFile(filepath.Join(a.logDir, "coder-startup-script.log"), os.O_CREATE|os.O_RDWR, 0o600)
 	if err != nil {
 		return xerrors.Errorf("open startup script log file: %w", err)
 	}
 	defer func() {
-		_ = writer.Close()
+		_ = fileWriter.Close()
 	}()
+
+	// Buffer 64KiB before hitting the DB.
+	bufferedAPIWriter := bufio.NewWriterSize(&apiLogWriter{a.client, ctx, []byte{}}, 64<<10)
+	defer bufferedAPIWriter.Flush()
+	writer := io.MultiWriter(bufferedAPIWriter, fileWriter)
+
 	cmd, err := a.createCommand(ctx, script, nil)
 	if err != nil {
 		return xerrors.Errorf("create command: %w", err)
