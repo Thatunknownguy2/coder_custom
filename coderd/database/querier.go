@@ -108,6 +108,7 @@ type sqlcQuerier interface {
 	GetWorkspaceAgentByAuthToken(ctx context.Context, authToken uuid.UUID) (WorkspaceAgent, error)
 	GetWorkspaceAgentByID(ctx context.Context, id uuid.UUID) (WorkspaceAgent, error)
 	GetWorkspaceAgentByInstanceID(ctx context.Context, authInstanceID string) (WorkspaceAgent, error)
+	GetWorkspaceAgentStartupLogsByID(ctx context.Context, agentID uuid.UUID) (StartupScriptLog, error)
 	GetWorkspaceAgentsByResourceIDs(ctx context.Context, ids []uuid.UUID) ([]WorkspaceAgent, error)
 	GetWorkspaceAgentsCreatedAfter(ctx context.Context, createdAt time.Time) ([]WorkspaceAgent, error)
 	GetWorkspaceAppByAgentIDAndSlug(ctx context.Context, arg GetWorkspaceAppByAgentIDAndSlugParams) (WorkspaceApp, error)
@@ -149,6 +150,7 @@ type sqlcQuerier interface {
 	InsertOrUpdateLastUpdateCheck(ctx context.Context, value string) error
 	InsertOrUpdateLogoURL(ctx context.Context, value string) error
 	InsertOrUpdateServiceBanner(ctx context.Context, value string) error
+	InsertOrUpdateWorkspaceAgentStartupLogsByID(ctx context.Context, arg InsertOrUpdateWorkspaceAgentStartupLogsByIDParams) error
 	InsertOrganization(ctx context.Context, arg InsertOrganizationParams) (Organization, error)
 	InsertOrganizationMember(ctx context.Context, arg InsertOrganizationMemberParams) (OrganizationMember, error)
 	InsertParameterSchema(ctx context.Context, arg InsertParameterSchemaParams) (ParameterSchema, error)

@@ -342,6 +342,11 @@ CREATE TABLE site_configs (
     value character varying(8192) NOT NULL
 );
 
+CREATE TABLE startup_script_logs (
+    agent_id uuid NOT NULL,
+    output text NOT NULL
+);
+
 CREATE TABLE template_version_parameters (
     template_version_id uuid NOT NULL,
     name text NOT NULL,
@@ -804,6 +809,9 @@ ALTER TABLE ONLY provisioner_job_logs
 
 ALTER TABLE ONLY provisioner_jobs
     ADD CONSTRAINT provisioner_jobs_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY startup_script_logs
+    ADD CONSTRAINT startup_script_logs_agent_id_fkey FOREIGN KEY (agent_id) REFERENCES workspace_agents(id) ON DELETE CASCADE;
 
 ALTER TABLE ONLY template_version_parameters
     ADD CONSTRAINT template_version_parameters_template_version_id_fkey FOREIGN KEY (template_version_id) REFERENCES template_versions(id) ON DELETE CASCADE;

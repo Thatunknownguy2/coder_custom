@@ -966,6 +966,22 @@ func (s *MethodTestSuite) TestWorkspace() {
 			ID: agt.ID,
 		}).Asserts(ws, rbac.ActionUpdate).Returns()
 	}))
+	s.Run("GetWorkspaceAgentStartupLogsByID", s.Subtest(func(db database.Store, check *expects) {
+		ws := dbgen.Workspace(s.T(), db, database.Workspace{})
+		build := dbgen.WorkspaceBuild(s.T(), db, database.WorkspaceBuild{WorkspaceID: ws.ID, JobID: uuid.New()})
+		res := dbgen.WorkspaceResource(s.T(), db, database.WorkspaceResource{JobID: build.JobID})
+		agt := dbgen.WorkspaceAgent(s.T(), db, database.WorkspaceAgent{ResourceID: res.ID})
+		check.Args(agt.ID).Asserts(ws, rbac.ActionRead).Returns()
+	}))
+	s.Run("InsertOrUpdateWorkspaceAgentStartupLogsByID", s.Subtest(func(db database.Store, check *expects) {
+		ws := dbgen.Workspace(s.T(), db, database.Workspace{})
+		build := dbgen.WorkspaceBuild(s.T(), db, database.WorkspaceBuild{WorkspaceID: ws.ID, JobID: uuid.New()})
+		res := dbgen.WorkspaceResource(s.T(), db, database.WorkspaceResource{JobID: build.JobID})
+		agt := dbgen.WorkspaceAgent(s.T(), db, database.WorkspaceAgent{ResourceID: res.ID})
+		check.Args(database.InsertOrUpdateWorkspaceAgentStartupLogsByIDParams{
+			AgentID: agt.ID,
+		}).Asserts(ws, rbac.ActionUpdate).Returns()
+	}))
 	s.Run("GetWorkspaceAppByAgentIDAndSlug", s.Subtest(func(db database.Store, check *expects) {
 		ws := dbgen.Workspace(s.T(), db, database.Workspace{})
 		build := dbgen.WorkspaceBuild(s.T(), db, database.WorkspaceBuild{WorkspaceID: ws.ID, JobID: uuid.New()})

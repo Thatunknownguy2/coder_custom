@@ -3050,6 +3050,42 @@ func (q *sqlQuerier) InsertOrUpdateServiceBanner(ctx context.Context, value stri
 	return err
 }
 
+const getWorkspaceAgentStartupLogsByID = `-- name: GetWorkspaceAgentStartupLogsByID :one
+SELECT
+	agent_id, output
+FROM
+	startup_script_logs
+WHERE
+	agent_id = $1
+`
+
+func (q *sqlQuerier) GetWorkspaceAgentStartupLogsByID(ctx context.Context, agentID uuid.UUID) (StartupScriptLog, error) {
+	row := q.db.QueryRowContext(ctx, getWorkspaceAgentStartupLogsByID, agentID)
+	var i StartupScriptLog
+	err := row.Scan(&i.AgentID, &i.Output)
+	return i, err
+}
+
+const insertOrUpdateWorkspaceAgentStartupLogsByID = `-- name: InsertOrUpdateWorkspaceAgentStartupLogsByID :exec
+INSERT INTO
+	startup_script_logs (agent_id, output)
+VALUES ($1, $2)
+ON CONFLICT (agent_id) DO UPDATE
+	SET
+		output = $2
+	WHERE agent_id = $1
+`
+
+type InsertOrUpdateWorkspaceAgentStartupLogsByIDParams struct {
+	AgentID uuid.UUID `db:"agent_id" json:"agent_id"`
+	Output  string    `db:"output" json:"output"`
+}
+
+func (q *sqlQuerier) InsertOrUpdateWorkspaceAgentStartupLogsByID(ctx context.Context, arg InsertOrUpdateWorkspaceAgentStartupLogsByIDParams) error {
+	_, err := q.db.ExecContext(ctx, insertOrUpdateWorkspaceAgentStartupLogsByID, arg.AgentID, arg.Output)
+	return err
+}
+
 const getTemplateAverageBuildTime = `-- name: GetTemplateAverageBuildTime :one
 WITH build_times AS (
 SELECT

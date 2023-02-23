@@ -1263,6 +1263,32 @@ func (q *querier) UpdateWorkspaceAgentStartupByID(ctx context.Context, arg datab
 	return q.db.UpdateWorkspaceAgentStartupByID(ctx, arg)
 }
 
+func (q *querier) GetWorkspaceAgentStartupLogsByID(ctx context.Context, agentID uuid.UUID) (database.StartupScriptLog, error) {
+	workspace, err := q.db.GetWorkspaceByAgentID(ctx, agentID)
+	if err != nil {
+		return database.StartupScriptLog{}, err
+	}
+
+	if err := q.authorizeContext(ctx, rbac.ActionRead, workspace); err != nil {
+		return database.StartupScriptLog{}, err
+	}
+
+	return q.db.GetWorkspaceAgentStartupLogsByID(ctx, agentID)
+}
+
+func (q *querier) InsertOrUpdateWorkspaceAgentStartupLogsByID(ctx context.Context, arg database.InsertOrUpdateWorkspaceAgentStartupLogsByIDParams) error {
+	workspace, err := q.db.GetWorkspaceByAgentID(ctx, arg.AgentID)
+	if err != nil {
+		return err
+	}
+
+	if err := q.authorizeContext(ctx, rbac.ActionUpdate, workspace); err != nil {
+		return err
+	}
+
+	return q.db.InsertOrUpdateWorkspaceAgentStartupLogsByID(ctx, arg)
+}
+
 func (q *querier) GetWorkspaceAppByAgentIDAndSlug(ctx context.Context, arg database.GetWorkspaceAppByAgentIDAndSlugParams) (database.WorkspaceApp, error) {
 	// If we can fetch the workspace, we can fetch the apps. Use the authorized call.
 	if _, err := q.GetWorkspaceByAgentID(ctx, arg.AgentID); err != nil {
