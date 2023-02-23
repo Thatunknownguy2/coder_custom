@@ -208,6 +208,68 @@ func (api *API) postWorkspaceAgentStartup(rw http.ResponseWriter, r *http.Reques
 	httpapi.Write(ctx, rw, http.StatusOK, nil)
 }
 
+// @Summary Stream workspace agent startup logs
+// @ID stream-workspace-agent-startup-logs
+// @Security CoderSessionToken
+// @Produce json
+// @Tags Agents
+// @Param workspaceagent path string true "Workspace agent ID" format(uuid)
+// @Success 200 {object} codersdk.StartupScriptLog
+// @Router /workspaceagents/{workspaceagent}/logs [get]
+func (api *API) streamWorkspaceAgentStartupLogs(rw http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	workspaceAgent := httpmw.WorkspaceAgent(r)
+
+	// TODO: sub to changes
+	// TODO: sse
+
+	logs, err := api.Database.GetWorkspaceAgentStartupLogsByID(ctx, workspaceAgent.ID)
+	if err != nil {
+		httpapi.Write(ctx, rw, http.StatusInternalServerError, codersdk.Response{
+			Message: "Error uploading startup logs",
+			Detail:  err.Error(),
+		})
+		return
+	}
+
+	httpapi.Write(ctx, rw, http.StatusOK, codersdk.StartupScriptLog{
+		Output: logs.Output,
+	})
+}
+
+// @Summary Submit most recent workspace agent startup logs
+// @ID insert-update-workspace-agent-startup-logs
+// @Security CoderSessionToken
+// @Accept json
+// @Produce json
+// @Tags Agents
+// @Param request body agentsdk.InsertOrUpdateStartupLogsRequest true "Startup logs"
+// @Success 200
+// @Router /workspaceagents/me/startup/logs [patch]
+// @x-apidocgen {"skip": true}
+func (api *API) insertOrUpdateWorkspaceAgentStartupLogs(rw http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	workspaceAgent := httpmw.WorkspaceAgent(r)
+
+	var req agentsdk.InsertOrUpdateStartupLogsRequest
+	if !httpapi.Read(ctx, rw, r, &req) {
+		return
+	}
+
+	if err := api.Database.InsertOrUpdateWorkspaceAgentStartupLogsByID(ctx, database.InsertOrUpdateWorkspaceAgentStartupLogsByIDParams{
+		AgentID: workspaceAgent.ID,
+		Output:  req.Output,
+	}); err != nil {
+		httpapi.Write(ctx, rw, http.StatusInternalServerError, codersdk.Response{
+			Message: "Error uploading startup logs",
+			Detail:  err.Error(),
+		})
+		return
+	}
+
+	httpapi.Write(ctx, rw, http.StatusOK, nil)
+}
+
 // workspaceAgentPTY spawns a PTY and pipes it over a WebSocket.
 // This is used for the web terminal.
 //

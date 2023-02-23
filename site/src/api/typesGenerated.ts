@@ -657,6 +657,11 @@ export interface ServiceBannerConfig {
   readonly background_color?: string
 }
 
+// From codersdk/workspaceagents.go
+export interface StartupScriptLog {
+  readonly Output: string
+}
+
 // From codersdk/deployment.go
 export interface SwaggerConfig {
   readonly enable: DeploymentConfigField<boolean>

@@ -81,6 +81,11 @@ type WorkspaceAgent struct {
 	StartupScriptTimeoutSeconds int32 `db:"startup_script_timeout_seconds" json:"startup_script_timeout_seconds"`
 }
 
+// TODO: not really happy with this name or any of the other names
+type StartupScriptLog struct {
+	Output string
+}
+
 type DERPRegion struct {
 	Preferred           bool    `json:"preferred"`
 	LatencyMilliseconds float64 `json:"latency_ms"`
