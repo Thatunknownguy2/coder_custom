@@ -1,6 +1,6 @@
 ---
 name: Develop in Kubernetes
-description: Get started with Kubernetes development.
+description: Get started developing in Kubernetes.
 tags: [cloud, kubernetes]
 icon: /icon/k8s.png
 ---
