@@ -3,11 +3,12 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-terraform.url = "github:nixos/nixpkgs/f44884060cb94240efbe55620f38a8ec8d9af601";
     flake-utils.url = "github:numtide/flake-utils";
     drpc.url = "github:storj/drpc/v0.0.32";
   };
 
-  outputs = { self, nixpkgs, flake-utils, drpc }:
+  outputs = { self, nixpkgs, nixpkgs-terraform, flake-utils, drpc }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
@@ -44,7 +45,7 @@
             shellcheck
             shfmt
             sqlc
-            terraform
+            nixpkgs-terraform.legacyPackages.${system}.terraform
             typos
             yarn
             yq
