@@ -31,7 +31,7 @@ func TestCache_TemplateUsers(t *testing.T) {
 	)
 
 	type args struct {
-		rows []database.InsertAgentStatParams
+		rows []database.InsertWorkspaceAgentStatParams
 	}
 	type want struct {
 		entries     []codersdk.DAUEntry
@@ -45,7 +45,7 @@ func TestCache_TemplateUsers(t *testing.T) {
 		{"empty", args{}, want{nil, 0}},
 		{
 			"one hole", args{
-				rows: []database.InsertAgentStatParams{
+				rows: []database.InsertWorkspaceAgentStatParams{
 					{
 						CreatedAt: date(2022, 8, 27),
 						UserID:    zebra,
@@ -75,7 +75,7 @@ func TestCache_TemplateUsers(t *testing.T) {
 			}, 1},
 		},
 		{"no holes", args{
-			rows: []database.InsertAgentStatParams{
+			rows: []database.InsertWorkspaceAgentStatParams{
 				{
 					CreatedAt: date(2022, 8, 27),
 					UserID:    zebra,
@@ -104,7 +104,7 @@ func TestCache_TemplateUsers(t *testing.T) {
 			},
 		}, 1}},
 		{"holes", args{
-			rows: []database.InsertAgentStatParams{
+			rows: []database.InsertWorkspaceAgentStatParams{
 				{
 					CreatedAt: date(2022, 1, 1),
 					UserID:    zebra,
@@ -173,13 +173,10 @@ func TestCache_TemplateUsers(t *testing.T) {
 				Provisioner: database.ProvisionerTypeEcho,
 			})
 
-			gotUniqueUsers, ok := cache.TemplateUniqueUsers(template.ID)
-			require.False(t, ok, "template shouldn't have loaded yet")
-			require.EqualValues(t, -1, gotUniqueUsers)
-
 			for _, row := range tt.args.rows {
 				row.TemplateID = template.ID
-				db.InsertAgentStat(context.Background(), row)
+				row.ConnectionCount = 1
+				db.InsertWorkspaceAgentStat(context.Background(), row)
 			}
 
 			require.Eventuallyf(t, func() bool {
@@ -189,7 +186,7 @@ func TestCache_TemplateUsers(t *testing.T) {
 				"TemplateDAUs never populated",
 			)
 
-			gotUniqueUsers, ok = cache.TemplateUniqueUsers(template.ID)
+			gotUniqueUsers, ok := cache.TemplateUniqueUsers(template.ID)
 			require.True(t, ok)
 
 			gotEntries, ok := cache.TemplateDAUs(template.ID)

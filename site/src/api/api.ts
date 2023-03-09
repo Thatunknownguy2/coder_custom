@@ -1,6 +1,7 @@
 import axios, { AxiosRequestHeaders } from "axios"
 import dayjs from "dayjs"
 import * as Types from "./types"
+import { DeploymentConfig } from "./types"
 import * as TypesGen from "./typesGenerated"
 
 export const hardCodedCSRFCookie = (): string => {
@@ -142,8 +143,8 @@ export const getApiKey = async (): Promise<TypesGen.GenerateAPIKeyResponse> => {
 
 export const getTokens = async (
   params: TypesGen.TokensFilter,
-): Promise<TypesGen.APIKey[]> => {
-  const response = await axios.get<TypesGen.APIKey[]>(
+): Promise<TypesGen.APIKeyWithOwner[]> => {
+  const response = await axios.get<TypesGen.APIKeyWithOwner[]>(
     `/api/v2/users/me/keys/tokens`,
     {
       params,
@@ -235,6 +236,15 @@ export const getTemplateVersionResources = async (
   return response.data
 }
 
+export const getTemplateVersionVariables = async (
+  versionId: string,
+): Promise<TypesGen.TemplateVersionVariable[]> => {
+  const response = await axios.get<TypesGen.TemplateVersionVariable[]>(
+    `/api/v2/templateversions/${versionId}/variables`,
+  )
+  return response.data
+}
+
 export const getTemplateVersions = async (
   templateId: string,
 ): Promise<TypesGen.TemplateVersion[]> => {
@@ -291,6 +301,15 @@ export const createTemplateVersion = async (
   const response = await axios.post<TypesGen.TemplateVersion>(
     `/api/v2/organizations/${organizationId}/templateversions`,
     data,
+  )
+  return response.data
+}
+
+export const getTemplateVersionGitAuth = async (
+  versionId: string,
+): Promise<TypesGen.TemplateVersionGitAuth[]> => {
+  const response = await axios.get(
+    `/api/v2/templateversions/${versionId}/gitauth`,
   )
   return response.data
 }
@@ -666,7 +685,6 @@ export const getEntitlements = async (): Promise<TypesGen.Entitlements> => {
     if (axios.isAxiosError(ex) && ex.response?.status === 404) {
       return {
         errors: [],
-        experimental: false,
         features: withDefaultFeatures({}),
         has_license: false,
         require_telemetry: false,
@@ -788,11 +806,10 @@ export const getAgentListeningPorts = async (
   return response.data
 }
 
-export const getDeploymentConfig =
-  async (): Promise<TypesGen.DeploymentConfig> => {
-    const response = await axios.get(`/api/v2/config/deployment`)
-    return response.data
-  }
+export const getDeploymentValues = async (): Promise<DeploymentConfig> => {
+  const response = await axios.get(`/api/v2/config/deployment`)
+  return response.data
+}
 
 export const getReplicas = async (): Promise<TypesGen.Replica[]> => {
   const response = await axios.get(`/api/v2/replicas`)
