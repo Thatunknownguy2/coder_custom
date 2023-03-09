@@ -75,7 +75,7 @@ func ExtractOAuth2(config OAuth2Config, client *http.Client) func(http.Handler) 
 					Value:    state,
 					Path:     "/",
 					HttpOnly: true,
-					SameSite: http.SameSiteLaxMode,
+					SameSite: http.SameSiteNoneMode,
 				})
 				// Redirect must always be specified, otherwise
 				// an old redirect could apply!
@@ -84,7 +84,7 @@ func ExtractOAuth2(config OAuth2Config, client *http.Client) func(http.Handler) 
 					Value:    r.URL.Query().Get("redirect"),
 					Path:     "/",
 					HttpOnly: true,
-					SameSite: http.SameSiteLaxMode,
+					SameSite: http.SameSiteNoneMode,
 				})
 
 				http.Redirect(rw, r, config.AuthCodeURL(state, oauth2.AccessTypeOffline), http.StatusTemporaryRedirect)

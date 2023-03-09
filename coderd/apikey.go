@@ -369,7 +369,7 @@ func (api *API) createAPIKey(ctx context.Context, params createAPIKeyParams) (*h
 		Value:    sessionToken,
 		Path:     "/",
 		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteNoneMode,
 		Secure:   api.SecureAuthCookie,
 	}, &key, nil
 }

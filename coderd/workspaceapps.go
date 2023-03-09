@@ -664,7 +664,7 @@ func (api *API) setWorkspaceAppCookie(rw http.ResponseWriter, r *http.Request, t
 		Path:     "/",
 		MaxAge:   maxAge,
 		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteNoneMode,
 		Secure:   api.SecureAuthCookie,
 	})
 

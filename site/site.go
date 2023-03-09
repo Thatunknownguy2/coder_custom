@@ -352,7 +352,6 @@ func cspHeaders(next http.Handler) http.Handler {
 			_, _ = fmt.Fprintf(&csp, "%s %s; ", src, strings.Join(vals, " "))
 		}
 
-		w.Header().Set("Content-Security-Policy", csp.String())
 		next.ServeHTTP(w, r)
 	})
 }
